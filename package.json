@@ -2,10 +2,14 @@
   "name": "multisig-wallet-gnosis",
   "version": "1.6.0",
   "description": "Ethereum MultiSignature Wallet. Main module, for installing all dependencies",
+  "engines": {
+    "node": "v8.17.0",
+    "npm": "v6.13.4"
+  },
   "scripts": {
     "test-dapp": "cd dapp && npm test",
     "test": "sh truffle_test_runner.sh",
-    "install": "cd dapp && npm install",
+    "install": "cd dapp && yarn --registry=https://registry.npm.taobao.org",
     "start": "cd dapp && npm start"
   },
   "repository": {
