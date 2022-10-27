@@ -3,8 +3,8 @@
   "version": "1.6.0",
   "description": "Ethereum MultiSignature Wallet. Main module, for installing all dependencies",
   "engines": {
-    "node": "v8.17.0",
-    "npm": "v6.13.4"
+    "node": ">=8.17.0",
+    "npm": ">=6.13.4"
   },
   "scripts": {
     "test-dapp": "cd dapp && npm test",

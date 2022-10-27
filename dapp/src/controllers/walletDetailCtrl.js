@@ -53,6 +53,7 @@
         $scope.showTxs = "all";
         $scope.hideOwners = true;
         $scope.hideTokens = true;
+        $scope.hideDapps = true;
         // Get address book from localStorage
         $scope.addressBook = JSON.parse(localStorage.getItem('addressBook') || '{}');
 
@@ -71,18 +72,18 @@
 
               // Get number of confirmations
               Wallet
-              .getRequired(
-                wallet.address,
-                function (e, confirmations) {
-                  $scope.data.threshold = confirmations.toNumber();
-                }
-              ).call();
+                .getRequired(
+                  wallet.address,
+                  function (e, confirmations) {
+                    $scope.data.threshold = confirmations.toNumber();
+                  }
+                ).call();
 
               // Get owners
               Wallet.getOwners(wallet.address, function (e, owners) {
                 if (e) {
-                    Utils.dangerAlert(e);
-                    return;
+                  Utils.dangerAlert(e);
+                  return;
                 }
 
                 $scope.data.owners = owners.map(function (address) { return Web3Service.toChecksumAddress(address); });
@@ -152,7 +153,7 @@
                         'name': 'Owner ' + (index + 1),
                         'address': item
                       };
-                      if (index == $scope.owners.length-1) { // last item
+                      if (index == $scope.owners.length - 1) { // last item
                         Wallet.updateWallet($scope.wallet);
                       }
                     });
@@ -883,6 +884,72 @@
             controller: 'editABICtrl'
           });
         };
+
+        window.resCallback = window.resCallback ? window.resCallback : new Map();
+
+        const _send = function (payload, id) {
+          console.log("开始调用 _send……", payload, id)
+
+          switch (payload.method) {
+            case "eth_accounts":
+              console.log("开始调用 eth_accounts：", this.address, this.isEmbedded, id, window.resCallback.get(id).length)
+              window.resCallback.get(id)(null, [$routeParams.address])
+              break;
+
+            default:
+              break;
+          }
+        }
+
+        const send = function (payload, callback) {
+          console.log("开始调用 send……", this, payload, callback)
+
+          const id = payload.id ? payload.id : new Date().getTime()
+          const params = payload.params ? payload.params : []
+
+          payload.id = id
+          payload.jsonrpc = "2.0"
+          payload.params = params
+          console.log("修正参数：", payload)
+
+          if (callback) {
+            window.resCallback.set(id, callback)
+            _send(payload, id)
+          }
+        }
+
+        $scope.go = function (url) {
+          const dappURL = "http://localhost:3000";
+          let w = null;
+
+          window.document.domain = "localhost";
+
+          window.addEventListener("message", e => {
+            if (e.origin === dappURL && e.data === "loaded") {
+              console.log("收到了", e.data);
+
+              w.multisigWalletAddress = $routeParams.address;
+
+              let provider = { ...window.web3.currentProvider };
+              provider = window.web3.currentProvider;
+              provider.selectedAddress = $routeParams.address;
+              provider.send = payload => {
+                console.log("发起交易", payload);
+              };
+              provider.sendAsync = async (payload, callback) => {
+                console.log("调用window.ethereum.sendAsync()", payload, callback)
+                send(payload, callback);
+              };
+
+              w.multisigProvider = provider;
+
+              w.postMessage("passed", dappURL);
+              console.log("给完了值。", provider)
+            }
+          });
+
+          w = window.open(url, "_blank");
+        }
       });
   }
 )();

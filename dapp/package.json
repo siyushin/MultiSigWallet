@@ -2,8 +2,8 @@
   "name": "multisigweb",
   "version": "1.6.0",
   "engines": {
-    "node": "v8.17.0",
-    "npm": "v6.13.4"
+    "node": ">=8.17.0",
+    "npm": ">=6.13.4"
   },
   "eslintConfig": {
     "env": {

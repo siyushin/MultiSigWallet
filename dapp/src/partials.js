@@ -244,6 +244,12 @@ angular.module('multiSigWeb').run(['$templateCache', function($templateCache) {
     "</div>\n"
   );
 
+  $templateCache.put('src/partials/dapps.html',
+    "<div class=\"tx-data\">\n" +
+    "  Dapps \n" +
+    "</div>\n"
+  );
+
 
   $templateCache.put('src/partials/settings.html',
     "<div class=\"panel panel-default\">\n" +
