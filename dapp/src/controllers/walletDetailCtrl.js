@@ -885,39 +885,6 @@
           });
         };
 
-        window.resCallback = window.resCallback ? window.resCallback : new Map();
-
-        const _send = function (payload, id) {
-          console.log("开始调用 _send……", payload, id)
-
-          switch (payload.method) {
-            case "eth_accounts":
-              console.log("开始调用 eth_accounts：", this.address, this.isEmbedded, id, window.resCallback.get(id).length)
-              window.resCallback.get(id)(null, [$routeParams.address])
-              break;
-
-            default:
-              break;
-          }
-        }
-
-        const send = function (payload, callback) {
-          console.log("开始调用 send……", this, payload, callback)
-
-          const id = payload.id ? payload.id : new Date().getTime()
-          const params = payload.params ? payload.params : []
-
-          payload.id = id
-          payload.jsonrpc = "2.0"
-          payload.params = params
-          console.log("修正参数：", payload)
-
-          if (callback) {
-            window.resCallback.set(id, callback)
-            _send(payload, id)
-          }
-        }
-
         $scope.go = function (url) {
           const dappURL = "http://localhost:3000";
           let w = null;
@@ -925,26 +892,35 @@
           window.document.domain = "localhost";
 
           window.addEventListener("message", e => {
-            if (e.origin === dappURL && e.data === "loaded") {
-              console.log("收到了", e.data);
+            if (e.origin === dappURL) {
+              if (e.data === "loaded") {
+                w.multisigWalletAddress = $routeParams.address;
+                w.multisigProvider = { ...window.web3.currentProvider };
 
-              w.multisigWalletAddress = $routeParams.address;
+                w.postMessage("passed", dappURL);
+              }
 
-              let provider = { ...window.web3.currentProvider };
-              provider = window.web3.currentProvider;
-              provider.selectedAddress = $routeParams.address;
-              provider.send = payload => {
-                console.log("发起交易", payload);
-              };
-              provider.sendAsync = async (payload, callback) => {
-                console.log("调用window.ethereum.sendAsync()", payload, callback)
-                send(payload, callback);
-              };
+              if (e.data.method) {
+                switch (e.data.method) {
+                  case "eth_accounts":
+                    w.postMessage({
+                      id: e.data.id,
+                      response: [$routeParams.address]
+                    }, dappURL);
+                    break;
 
-              w.multisigProvider = provider;
+                  case "eth_getBalance":
+                    w.postMessage({
+                      id: e.data.id,
+                      response: $scope.balance.toFixed()
+                    }, dappURL);
+                    break;
 
-              w.postMessage("passed", dappURL);
-              console.log("给完了值。", provider)
+                  default:
+                    console.log("请求了其它", e.data);
+                    break;
+                }
+              }
             }
           });
 
